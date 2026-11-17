@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1d1d1d">
+  <title>Taper Type — SHAKURA Perspective</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+    @font-face {
+      font-family: Anton;
+      src: url('./assets/anton/Anton-Regular.ttf') format('truetype');
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+    }
+
+    :root {
+      color-scheme: dark;
+      --yellow: #ffcd27;
+      --black: #080808;
+      --white: #fff;
+      --panel: #111;
+      --line: #303030;
+      --muted: #999;
+    }
+    * { box-sizing: border-box; }
+    html, body { min-width: 320px; min-height: 100%; margin: 0; }
+    body { background: var(--black); color: var(--white); font-family: 'DM Sans', Arial, sans-serif; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible { outline: 2px solid var(--yellow); outline-offset: 3px; }
+    .app { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) 326px; }
+    .stage { position: relative; min-height: 680px; overflow: hidden; display: grid; place-items: center; background: #1d1d1d; transition: background-color .18s ease; }
+    .preview-wrap { width: min(88%, 1100px); height: min(72vh, 600px); display: grid; place-items: center; }
+    #preview { width: 100%; height: 100%; overflow: visible; }
+    .stage-mark { position: absolute; top: 25px; left: 28px; display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,.58); font: 12px 'DM Mono', monospace; letter-spacing: .1em; text-transform: uppercase; }
+    .stage-mark::before { width: 8px; height: 8px; background: var(--yellow); content: ''; }
+    .stage-footer { position: absolute; bottom: 23px; left: 28px; right: 28px; display: flex; justify-content: space-between; gap: 20px; color: rgba(255,255,255,.5); font: 12px 'DM Mono', monospace; letter-spacing: .07em; text-transform: uppercase; }
+    .stage-footer a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+    .sidebar { min-height: 100vh; padding: 23px 20px 17px; border-left: 1px solid #262626; background: var(--black); display: flex; flex-direction: column; }
+    .brand { margin: 0 0 25px; color: var(--yellow); font: 28px/.95 Anton, Impact, sans-serif; letter-spacing: .025em; }
+    .brand span { display: block; margin-top: 8px; color: #aaa; font: 12px 'DM Mono', monospace; letter-spacing: .13em; }
+    .section { margin-bottom: 21px; }
+    .label { margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; color: var(--yellow); font: 12px Anton, Impact, sans-serif; letter-spacing: .035em; text-transform: uppercase; }
+    .label small { color: var(--muted); font: 12px 'DM Mono', monospace; letter-spacing: 0; text-transform: none; }
+    .text-input { width: 100%; height: 43px; padding: 0 12px; border: 1px solid #565656; border-radius: 0; background: var(--panel); color: white; font-size: 13px; letter-spacing: .035em; text-transform: uppercase; }
+    .text-input:focus { border-color: var(--yellow); outline: none; }
+    .choice-row { display: grid; gap: 6px; }
+    .choice-row.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .choice-row.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .choice { min-width: 0; height: 39px; padding: 0 5px; border: 1px solid #303030; background: var(--panel); color: white; font-size: 12px; font-weight: 700; letter-spacing: .02em; line-height: 1.05; }
+    .choice:hover, .swatch:hover { border-color: #777; }
+    .choice.active { border-color: var(--yellow); background: var(--yellow); color: var(--black); }
+    .angle-choice { height: 43px; font: 21px Anton, Impact, sans-serif; }
+    .color-row { display: flex; gap: 9px; align-items: center; }
+    .swatch { width: 40px; height: 35px; padding: 0; display: grid; place-items: center; border: 1px solid #383838; background: var(--panel); }
+    .swatch .sample { width: 15px; height: 15px; border: 1px solid rgba(0,0,0,.3); }
+    .swatch.active { border-color: var(--yellow); box-shadow: inset 0 0 0 1px var(--yellow); }
+    .swatch.active .sample { outline: 1px solid var(--yellow); outline-offset: 3px; }
+    .actions { margin-top: auto; padding-top: 10px; }
+    .primary, .secondary { width: 100%; display: flex; justify-content: center; align-items: center; }
+    .primary { height: 47px; border: 0; background: var(--yellow); color: var(--black); font: 16px Anton, Impact, sans-serif; letter-spacing: .045em; }
+    .primary:hover { background: #ffda5e; }
+    .secondary { height: 34px; margin-top: 8px; border: 1px solid #383838; background: transparent; color: #eee; font-size: 12px; font-weight: 700; letter-spacing: .04em; }
+    .secondary:hover { border-color: var(--yellow); color: var(--yellow); }
+    .randomize { width: 100%; height: 30px; margin-top: 7px; border: 0; background: transparent; color: white; font-size: 12px; font-weight: 700; letter-spacing: .11em; text-transform: uppercase; }
+    .randomize:hover { color: var(--yellow); }
+    .status { min-height: 25px; margin-top: 7px; color: var(--yellow); font: 12px/1.4 'DM Mono', monospace; text-align: center; }
+    .status.error { color: #ff8f8f; }
+    .hint { margin: 5px 0 0; color: #999; font-size: 12px; line-height: 1.5; text-align: center; }
+    @media (max-width: 780px) {
+      .app { grid-template-columns: minmax(0, 1fr) 290px; }
+      .sidebar { padding: 20px 15px; }
+      .stage { min-height: 620px; }
+      .preview-wrap { width: 92%; }
+    }
+    @media (max-width: 620px) {
+      .app { min-height: 100vh; display: flex; flex-direction: column; }
+      .stage { min-height: 50vh; min-height: 50svh; }
+      .preview-wrap { width: 90%; height: 34vh; height: 34svh; min-height: 210px; }
+      .stage-mark { top: 15px; left: 17px; }
+      .stage-footer { right: 17px; bottom: 14px; left: 17px; font-size: 12px; }
+      .sidebar { min-height: unset; padding: 20px 18px 16px; border-top: 1px solid #262626; border-left: 0; }
+      .brand { margin-bottom: 20px; }
+      .section { margin-bottom: 17px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <main class="stage" id="stage">
+      <div class="stage-mark">SHAKURA / Type Lab</div>
+      <div class="preview-wrap">
+        <svg id="preview" role="img" aria-label="Flattened perspective wordmark preview" viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+      <div class="stage-footer"><span>Taper Type · Perspective Study</span><a href="#" id="guidelines">How to use</a></div>
+    </main>
+    <aside class="sidebar" aria-label="Wordmark controls">
+      <h1 class="brand">TAPER TYPE<span>SHAKURA PERSPECTIVE TOOL</span></h1>
+
+      <section class="section">
+        <label class="label" for="wordInput">Type text <small>Anton / Outlined</small></label>
+        <input id="wordInput" class="text-input" type="text" maxlength="32" value="SHAKURA" spellcheck="false" autocomplete="off" aria-label="Text to distort">
+      </section>
+
+      <section class="section">
+        <div class="label">Distort edge</div>
+        <div class="choice-row three" id="edgeChoices" role="group" aria-label="Distort edge">
+          <button class="choice" data-edge="top" aria-pressed="false">TOP</button>
+          <button class="choice active" data-edge="bottom" aria-pressed="true">BOTTOM</button>
+          <button class="choice" data-edge="both" aria-pressed="false">TOP + BOTTOM</button>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="label">Direction</div>
+        <div class="choice-row two" id="directionChoices" role="group" aria-label="Distortion direction">
+          <button class="choice active" data-direction="left" aria-pressed="true">FROM LEFT</button>
+          <button class="choice" data-direction="right" aria-pressed="false">FROM RIGHT</button>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="label">Choose angle <small id="angleReadout">15°</small></div>
+        <div class="choice-row two" id="angleChoices" role="group" aria-label="Angle">
+          <button class="choice angle-choice active" data-angle="15" aria-pressed="true">15°</button>
+          <button class="choice angle-choice" data-angle="30" aria-pressed="false">30°</button>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="label">Choose color</div>
+        <div class="color-row" id="colorChoices" role="group" aria-label="Brand color theme">
+          <button class="swatch active" data-color="0" aria-label="Yellow on charcoal" aria-pressed="true" title="Yellow on charcoal"><span class="sample" style="background:#ffcd27"></span></button>
+          <button class="swatch" data-color="1" aria-label="Black on yellow" aria-pressed="false" title="Black on yellow"><span class="sample" style="background:#000;border-color:#ffcd27"></span></button>
+          <button class="swatch" data-color="2" aria-label="White on charcoal" aria-pressed="false" title="White on charcoal"><span class="sample" style="background:#fff"></span></button>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button class="primary" id="downloadBtn">DOWNLOAD SVG</button>
+        <button class="secondary" id="copyBtn">COPY SVG FOR FIGMA</button>
+        <button class="randomize" id="randomBtn">↻ &nbsp; Randomize settings</button>
+        <div class="status" id="status" aria-live="polite">Loading Anton outlines…</div>
+        <p class="hint">Copy, then paste into Figma as an editable vector.</p>
+      </div>
+    </aside>
+  </div>
+  <script>
+  (() => {
+    const $ = id => document.getElementById(id);
+    const preview = $('preview');
+    const stage = $('stage');
+    const wordInput = $('wordInput');
+    const status = $('status');
+    const palettes = [
+      { bg: '#1d1d1d', fg: '#ffcd27' },
+      { bg: '#ffcd27', fg: '#080808' },
+      { bg: '#1d1d1d', fg: '#fff' }
+    ];
+    const state = { text: 'SHAKURA', edge: 'bottom', direction: 'left', angle: 15, color: 0 };
+    let geometry = null;
+    let geometryText = '';
+    let latestSvg = '';
+    let requestTimer = 0;
+    let fontPromise;
+
+    function setStatus(message, isError = false) {
+      status.textContent = message || '';
+      status.classList.toggle('error', Boolean(isError));
+    }
+
+    function cleanText(value) {
+      return String(value || 'SHAKURA').replace(/[\r\n\t]+/g, ' ').trim().slice(0, 32).toUpperCase() || 'SHAKURA';
+    }
+
+    function loadFontTools() {
+      if (!fontPromise) {
+        fontPromise = new Promise((resolve, reject) => {
+          if (window.opentype) { resolve(window.opentype); return; }
+          const script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js';
+          script.async = true;
+          script.onload = () => window.opentype ? resolve(window.opentype) : reject(new Error('Outline library did not load.'));
+          script.onerror = () => reject(new Error('Could not load the outline library. Check your internet connection.'));
+          document.head.appendChild(script);
+        });
+      }
+      return fontPromise;
+    }
+
+    async function getAntonFont() {
+      if (!getAntonFont.promise) {
+        getAntonFont.promise = (async () => {
+          const opentype = await loadFontTools();
+          const url = new URL('./assets/anton/Anton-Regular.ttf', window.location.href);
+          const response = await fetch(url, { mode: 'cors', cache: 'force-cache' });
+          if (!response.ok) throw new Error('Could not load Anton Regular. Check your internet connection.');
+          const bytes = await response.arrayBuffer();
+          return opentype.parse(bytes);
+        })();
+      }
+      return getAntonFont.promise;
+    }
+
+    function contoursFromFontPath(path) {
+      const holder = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      holder.setAttribute('width', '1');
+      holder.setAttribute('height', '1');
+      holder.style.cssText = 'position:fixed;left:-10000px;top:0;overflow:visible;opacity:0;pointer-events:none';
+      const parts = path.toPathData(2).trim().split(/(?=[Mm])/).filter(Boolean);
+      document.body.appendChild(holder);
+      const contours = [];
+      try {
+        for (const d of parts) {
+          const sampler = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          sampler.setAttribute('d', d);
+          holder.appendChild(sampler);
+          const length = sampler.getTotalLength();
+          if (length >= 1) {
+            const steps = Math.max(14, Math.min(3000, Math.ceil(length / 1.1)));
+            const points = [];
+            for (let i = 0; i < steps; i++) {
+              const p = sampler.getPointAtLength(i / steps * length);
+              points.push({ x: p.x, y: p.y });
+            }
+            if (points.length >= 3) contours.push(points);
+          }
+        }
+      } finally {
+        holder.remove();
+      }
+      return contours;
+    }
+
+    async function requestOutlines() {
+      state.text = cleanText(wordInput.value);
+      wordInput.value = state.text;
+      const requestedText = state.text;
+      setStatus('Creating Anton outlines…');
+      try {
+        const font = await getAntonFont();
+        if (requestedText !== cleanText(wordInput.value)) return;
+        const fontSize = 320;
+        const path = font.getPath(requestedText, 0, 0, fontSize);
+        const bounds = path.getBoundingBox();
+        const contours = contoursFromFontPath(path);
+        if (!contours.length || bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1) throw new Error('Anton did not produce usable outline paths.');
+        geometry = {
+          contours,
+          minX: bounds.x1,
+          minY: bounds.y1,
+          maxX: bounds.x2,
+          maxY: bounds.y2,
+          width: bounds.x2 - bounds.x1,
+          height: bounds.y2 - bounds.y1
+        };
+        geometryText = requestedText;
+        render();
+      } catch (error) {
+        setStatus(error.message || 'Could not create Anton outlines.', true);
+      }
+    }
+
+    function buildWarpedSvg(geo, options) {
+      const tangent = Math.tan(Number(options.angle) * Math.PI / 180);
+      const W = Math.max(.001, geo.width);
+      const H = Math.max(.001, geo.height);
+      const k = tangent / H;
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      const warped = geo.contours.map(contour => contour.map(point => {
+        const x = point.x - geo.minX;
+        const y = point.y - geo.minY;
+        let X, Y;
+        if (options.edge === 'both') {
+          const u = options.direction === 'left' ? x : W - x;
+          const centerY = H / 2;
+          const scaleY = 1 + 2 * tangent * u / H;
+          X = x;
+          Y = centerY + (y - centerY) * scaleY;
+        } else {
+          const u = options.direction === 'left' ? x : W - x;
+          const denominator = 1 + k * u;
+          const compressedX = u / denominator;
+          X = options.direction === 'left' ? compressedX : W / (1 + k * W) - compressedX;
+          Y = options.edge === 'bottom' ? y / denominator : H - (H - y) / denominator;
+        }
+        minX = Math.min(minX, X); maxX = Math.max(maxX, X);
+        minY = Math.min(minY, Y); maxY = Math.max(maxY, Y);
+        return { x: X, y: Y };
+      }));
+      const outW = Math.max(1, maxX - minX);
+      const outH = Math.max(1, maxY - minY);
+      const color = palettes[options.color].fg;
+      const commands = warped.map(contour => {
+        const points = contour.map((p, i) => `${i ? 'L' : 'M'}${(p.x - minX).toFixed(2)} ${(p.y - minY).toFixed(2)}`);
+        return `${points.join(' ')} Z`;
+      }).join(' ');
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="${outW.toFixed(2)}" height="${outH.toFixed(2)}" viewBox="0 0 ${outW.toFixed(2)} ${outH.toFixed(2)}"><path d="${commands}" fill="${color}" fill-rule="evenodd"/></svg>`;
+    }
+
+    function render() {
+      if (!geometry || geometryText !== cleanText(wordInput.value)) return;
+      try {
+        latestSvg = buildWarpedSvg(geometry, state);
+        const parsed = new DOMParser().parseFromString(latestSvg, 'image/svg+xml');
+        preview.replaceChildren(document.importNode(parsed.documentElement.firstElementChild, true));
+        const width = Number(parsed.documentElement.getAttribute('width')) || 800;
+        const height = Number(parsed.documentElement.getAttribute('height')) || 300;
+        preview.setAttribute('viewBox', `0 0 ${width} ${height}`);
+        const palette = palettes[state.color];
+        stage.style.backgroundColor = palette.bg;
+        document.querySelector('.stage-mark').style.color = palette.bg === '#1d1d1d' ? 'rgba(255,255,255,.58)' : 'rgba(0,0,0,.58)';
+        document.querySelector('.stage-footer').style.color = palette.bg === '#1d1d1d' ? 'rgba(255,255,255,.5)' : 'rgba(0,0,0,.55)';
+        $('angleReadout').textContent = `${state.angle}°`;
+        setStatus('Anton outlines ready.');
+      } catch (error) {
+        setStatus(error.message || 'Distortion failed.', true);
+      }
+    }
+
+    function setActive(group, dataName, value) {
+      document.querySelectorAll(`#${group} [data-${dataName}]`).forEach(button => {
+        const active = String(button.dataset[dataName]) === String(value);
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+    }
+
+    $('edgeChoices').addEventListener('click', event => {
+      const button = event.target.closest('[data-edge]'); if (!button) return;
+      state.edge = button.dataset.edge; setActive('edgeChoices', 'edge', state.edge); render();
+    });
+    $('directionChoices').addEventListener('click', event => {
+      const button = event.target.closest('[data-direction]'); if (!button) return;
+      state.direction = button.dataset.direction; setActive('directionChoices', 'direction', state.direction); render();
+    });
+    $('angleChoices').addEventListener('click', event => {
+      const button = event.target.closest('[data-angle]'); if (!button) return;
+      state.angle = Number(button.dataset.angle); setActive('angleChoices', 'angle', state.angle); render();
+    });
+    $('colorChoices').addEventListener('click', event => {
+      const button = event.target.closest('[data-color]'); if (!button) return;
+      state.color = Number(button.dataset.color); setActive('colorChoices', 'color', state.color); render();
+    });
+    wordInput.addEventListener('input', () => {
+      clearTimeout(requestTimer);
+      setStatus('Updating outline…');
+      requestTimer = setTimeout(requestOutlines, 120);
+    });
+    $('downloadBtn').addEventListener('click', () => {
+      if (!latestSvg || geometryText !== cleanText(wordInput.value)) { setStatus('Wait for the outline to finish.', true); return; }
+      const blob = new Blob([latestSvg], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      const safeName = cleanText(wordInput.value).replace(/[^A-Z0-9-_]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'wordmark';
+      anchor.href = url; anchor.download = `${safeName}-perspective-outline.svg`; document.body.appendChild(anchor); anchor.click(); anchor.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setStatus('Flattened SVG downloaded.');
+    });
+    $('copyBtn').addEventListener('click', async () => {
+      if (!latestSvg || geometryText !== cleanText(wordInput.value)) { setStatus('Wait for the outline to finish.', true); return; }
+      try {
+        if (navigator.clipboard.write && window.ClipboardItem) {
+          try {
+            const svgBlob = new Blob([latestSvg], { type: 'image/svg+xml' });
+            const textBlob = new Blob([latestSvg], { type: 'text/plain' });
+            await navigator.clipboard.write([new ClipboardItem({ 'image/svg+xml': svgBlob, 'text/plain': textBlob })]);
+            setStatus('SVG copied as a vector. Paste it into Figma.');
+            return;
+          } catch (_) {}
+        }
+        await navigator.clipboard.writeText(latestSvg);
+        setStatus('SVG source copied. Paste it into Figma.');
+      } catch (_) {
+        setStatus('Clipboard access is unavailable here. Download the SVG instead.', true);
+      }
+    });
+    $('randomBtn').addEventListener('click', () => {
+      state.angle = [15, 30][Math.floor(Math.random() * 2)];
+      state.edge = ['top', 'bottom', 'both'][Math.floor(Math.random() * 3)];
+      state.direction = Math.random() < .5 ? 'left' : 'right';
+      state.color = Math.floor(Math.random() * palettes.length);
+      setActive('edgeChoices', 'edge', state.edge);
+      setActive('directionChoices', 'direction', state.direction);
+      setActive('angleChoices', 'angle', state.angle);
+      setActive('colorChoices', 'color', state.color);
+      render();
+    });
+    $('guidelines').addEventListener('click', event => {
+      event.preventDefault();
+      setStatus('Enter text, set an edge and direction, choose 15° or 30°, then copy or download the flattened SVG.');
+    });
+
+    requestOutlines();
+  })();
+  </script>
+</body>
+</html>
